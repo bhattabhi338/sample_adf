@@ -1,0 +1,21 @@
+{
+	"name": "SqlServer1",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"server": "Abhi-LOQ",
+			"database": "sample_db",
+			"encrypt": "mandatory",
+			"trustServerCertificate": true,
+			"authenticationType": "SQL",
+			"userName": "anotherabhi",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJhNGRiOTRkNS04ZGI3LTQzOGMtYWE3Ni1hZGQ3NjVjMTg5MDQiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "SelfHostedIR",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

@@ -1,0 +1,15 @@
+{
+	"name": "FactoryDataInstance338",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Enabled",
+			"editable": true
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "518e9a83-8122-4afa-967e-0ba7898dd579",
+		"tenantId": "fe586a12-7ac6-4abe-a848-0481349de246"
+	}
+}

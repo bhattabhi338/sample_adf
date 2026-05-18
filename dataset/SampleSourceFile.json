@@ -1,0 +1,65 @@
+{
+	"name": "SampleSourceFile",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "healthcare_messy_data.csv",
+				"container": "first-container"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Patient Name",
+				"type": "String"
+			},
+			{
+				"name": "Age",
+				"type": "String"
+			},
+			{
+				"name": "Gender",
+				"type": "String"
+			},
+			{
+				"name": "Condition",
+				"type": "String"
+			},
+			{
+				"name": "Medication",
+				"type": "String"
+			},
+			{
+				"name": "Visit Date",
+				"type": "String"
+			},
+			{
+				"name": "Blood Pressure",
+				"type": "String"
+			},
+			{
+				"name": "Cholesterol",
+				"type": "String"
+			},
+			{
+				"name": "Email",
+				"type": "String"
+			},
+			{
+				"name": "Phone Number",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
