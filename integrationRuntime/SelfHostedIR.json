@@ -1,0 +1,7 @@
+{
+	"name": "SelfHostedIR",
+	"properties": {
+		"type": "SelfHosted",
+		"description": "I created this to connect to my local SQL server on my local machine."
+	}
+}
