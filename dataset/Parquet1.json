@@ -10,6 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
+				"folderPath": "landing_files",
 				"container": "my-first-container"
 			},
 			"compressionCodec": "snappy"
