@@ -17,7 +17,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "SqlServerSource",
-						"sqlReaderQuery": "\nselect * from dbo.[order] \nwhere cast(orderDate as Date) between (select cast(last_load_st as Date) from audit.cntrl_mapping) \nand (select cast(last_load_end as Date) from audit.cntrl_mapping)",
+						"sqlReaderQuery": "select * from dbo.[order] \nwhere cast(orderDate as Date) between (select cast(last_load_st as Date) from audit.cntrl_mapping) \nand (select cast(last_load_end as Date) from audit.cntrl_mapping)",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -30,10 +30,10 @@
 					"enableStaging": true,
 					"stagingSettings": {
 						"linkedServiceName": {
-							"referenceName": "AzureBlobStorage1",
+							"referenceName": "ADLS",
 							"type": "LinkedServiceReference"
 						},
-						"path": "first-container"
+						"path": "my-first-container/staging_path"
 					}
 				},
 				"inputs": [
