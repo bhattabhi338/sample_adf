@@ -22,9 +22,13 @@
 						"partitionOption": "None"
 					},
 					"sink": {
-						"type": "AzureDatabricksDeltaLakeSink",
-						"importSettings": {
-							"type": "AzureDatabricksDeltaLakeImportCommand"
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings",
+							"copyBehavior": "FlattenHierarchy"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
 						}
 					},
 					"enableStaging": true,
@@ -34,6 +38,14 @@
 							"type": "LinkedServiceReference"
 						},
 						"path": "my-first-container/staging_path"
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
 					}
 				},
 				"inputs": [
@@ -44,7 +56,7 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "DBX_Orders",
+						"referenceName": "Parquet1",
 						"type": "DatasetReference"
 					}
 				]
