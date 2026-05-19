@@ -7,17 +7,21 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "FactoryDataInstance338"
 		},
+		"ADLS_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ADLS'"
+		},
 		"AzureBlobStorage1_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
 		},
-		"SqlServer1_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'SqlServer1'"
-		},
 		"Delta_Lake_accessToken": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accessToken' of 'Delta_Lake'"
+		},
+		"SqlServer1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'SqlServer1'"
 		},
 		"SqlServer1_properties_typeProperties_server": {
 			"type": "string",
@@ -57,7 +61,7 @@
 						"typeProperties": {
 							"source": {
 								"type": "SqlServerSource",
-								"sqlReaderQuery": "\nselect * from dbo.[order] \nwhere cast(orderDate as Date) between (select cast(last_load_st as Date) from audit.cntrl_mapping) \nand (select cast(last_load_end as Date) from audit.cntrl_mapping)",
+								"sqlReaderQuery": "select * from dbo.[order] \nwhere cast(orderDate as Date) between (select cast(last_load_st as Date) from audit.cntrl_mapping) \nand (select cast(last_load_end as Date) from audit.cntrl_mapping)",
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
@@ -70,10 +74,10 @@
 							"enableStaging": true,
 							"stagingSettings": {
 								"linkedServiceName": {
-									"referenceName": "AzureBlobStorage1",
+									"referenceName": "ADLS",
 									"type": "LinkedServiceReference"
 								},
-								"path": "first-container"
+								"path": "my-first-container/staging_path"
 							}
 						},
 						"inputs": [
@@ -100,7 +104,51 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/OLTP_Orders')]",
 				"[concat(variables('factoryId'), '/datasets/DBX_Orders')]",
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage1')]"
+				"[concat(variables('factoryId'), '/linkedServices/ADLS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DBX_Orders')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Delta_Lake",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLakeDataset",
+				"typeProperties": {
+					"database": "bronze",
+					"table": "orders"
+				},
+				"schema": [
+					{
+						"name": "OrderId",
+						"type": "long"
+					},
+					{
+						"name": "OrderDate",
+						"type": "timestamp"
+					},
+					{
+						"name": "OrderNumber",
+						"type": "string"
+					},
+					{
+						"name": "CustomerId",
+						"type": "integer"
+					},
+					{
+						"name": "TotalAmount",
+						"type": "decimal",
+						"precision": 12,
+						"scale": 2
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Delta_Lake')]"
 			]
 		},
 		{
@@ -152,6 +200,19 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ADLS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('ADLS_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage1')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -160,6 +221,24 @@
 				"type": "AzureBlobStorage",
 				"typeProperties": {
 					"connectionString": "[parameters('AzureBlobStorage1_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Delta_Lake')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLake",
+				"typeProperties": {
+					"domain": "https://adb-7405610998425085.5.azuredatabricks.net",
+					"clusterId": "0519-084235-u02ajkb6",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('Delta_Lake_accessToken')]"
+					}
 				}
 			},
 			"dependsOn": []
@@ -202,68 +281,6 @@
 				"typeProperties": {}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Delta_Lake')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"type": "AzureDatabricksDeltaLake",
-				"typeProperties": {
-					"domain": "https://adb-7405610998425085.5.azuredatabricks.net",
-					"clusterId": "0519-084235-u02ajkb6",
-					"accessToken": {
-						"type": "SecureString",
-						"value": "[parameters('Delta_Lake_accessToken')]"
-					}
-				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DBX_Orders')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "Delta_Lake",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureDatabricksDeltaLakeDataset",
-				"typeProperties": {
-					"database": "bronze",
-					"table": "orders"
-				},
-				"schema": [
-					{
-						"name": "OrderId",
-						"type": "long"
-					},
-					{
-						"name": "OrderDate",
-						"type": "timestamp"
-					},
-					{
-						"name": "OrderNumber",
-						"type": "string"
-					},
-					{
-						"name": "CustomerId",
-						"type": "integer"
-					},
-					{
-						"name": "TotalAmount",
-						"type": "decimal",
-						"precision": 12,
-						"scale": 2
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/Delta_Lake')]"
-			]
 		}
 	]
 }

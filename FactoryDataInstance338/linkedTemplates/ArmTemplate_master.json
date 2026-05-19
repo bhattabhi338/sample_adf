@@ -7,17 +7,21 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "FactoryDataInstance338"
 		},
+		"ADLS_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ADLS'"
+		},
 		"AzureBlobStorage1_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
 		},
-		"SqlServer1_password": {
-			"type": "secureString",
-			"metadata": "Secure string for 'password' of 'SqlServer1'"
-		},
 		"Delta_Lake_accessToken": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accessToken' of 'Delta_Lake'"
+		},
+		"SqlServer1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'SqlServer1'"
 		},
 		"SqlServer1_properties_typeProperties_server": {
 			"type": "string",
@@ -57,6 +61,9 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					},
+					"ADLS_connectionString": {
+						"value": "[parameters('ADLS_connectionString')]"
 					},
 					"AzureBlobStorage1_connectionString": {
 						"value": "[parameters('AzureBlobStorage1_connectionString')]"

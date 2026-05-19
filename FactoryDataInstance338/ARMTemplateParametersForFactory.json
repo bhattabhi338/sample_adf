@@ -5,13 +5,16 @@
 		"factoryName": {
 			"value": "FactoryDataInstance338"
 		},
+		"ADLS_connectionString": {
+			"value": ""
+		},
 		"AzureBlobStorage1_connectionString": {
 			"value": ""
 		},
-		"SqlServer1_password": {
+		"Delta_Lake_accessToken": {
 			"value": ""
 		},
-		"Delta_Lake_accessToken": {
+		"SqlServer1_password": {
 			"value": ""
 		},
 		"SqlServer1_properties_typeProperties_server": {
