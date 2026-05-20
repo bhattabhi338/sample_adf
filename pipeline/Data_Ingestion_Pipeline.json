@@ -1,0 +1,36 @@
+{
+	"name": "Data_Ingestion_Pipeline",
+	"properties": {
+		"description": "Ingest data from OLTP to Databricks with a staging layer in between.",
+		"activities": [
+			{
+				"name": "Fetch_Tables",
+				"description": "Read cntrl_mapping tables to fetch un_processed table names from OLTP.",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": "SELECT source_table_name, target_table_name FROM sample_db.audit.cntrl_mapping where is_processed = 0",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "Cntrl_mapping_Table",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"annotations": []
+	}
+}

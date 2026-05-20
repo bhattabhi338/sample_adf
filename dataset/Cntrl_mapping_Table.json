@@ -1,0 +1,50 @@
+{
+	"name": "Cntrl_mapping_Table",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlServer1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "source_table_name",
+				"type": "varchar"
+			},
+			{
+				"name": "target_table_name",
+				"type": "varchar"
+			},
+			{
+				"name": "source_layer_name",
+				"type": "varchar"
+			},
+			{
+				"name": "target_layer_name",
+				"type": "varchar"
+			},
+			{
+				"name": "is_processed",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "last_load_st",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "last_load_end",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "audit",
+			"table": "cntrl_mapping"
+		}
+	}
+}
