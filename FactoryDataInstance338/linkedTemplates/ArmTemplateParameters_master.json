@@ -8,7 +8,7 @@
 		"ADLS_connectionString": {
 			"value": ""
 		},
-		"AzureBlobStorage1_connectionString": {
+		"Data_Lake_accountKey": {
 			"value": ""
 		},
 		"Delta_Lake_accessToken": {
@@ -16,6 +16,9 @@
 		},
 		"SqlServer1_password": {
 			"value": ""
+		},
+		"Data_Lake_properties_typeProperties_url": {
+			"value": "https://mystorage1701.dfs.core.windows.net/"
 		},
 		"SqlServer1_properties_typeProperties_server": {
 			"value": "Abhi-LOQ"

@@ -11,9 +11,9 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ADLS'"
 		},
-		"AzureBlobStorage1_connectionString": {
+		"Data_Lake_accountKey": {
 			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
+			"metadata": "Secure string for 'accountKey' of 'Data_Lake'"
 		},
 		"Delta_Lake_accessToken": {
 			"type": "secureString",
@@ -22,6 +22,10 @@
 		"SqlServer1_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'SqlServer1'"
+		},
+		"Data_Lake_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://mystorage1701.dfs.core.windows.net/"
 		},
 		"SqlServer1_properties_typeProperties_server": {
 			"type": "string",
@@ -54,14 +58,18 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage1')]",
+			"name": "[concat(parameters('factoryName'), '/Data_Lake')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"type": "AzureBlobStorage",
+				"type": "AzureBlobFS",
 				"typeProperties": {
-					"connectionString": "[parameters('AzureBlobStorage1_connectionString')]"
+					"url": "[parameters('Data_Lake_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('Data_Lake_accountKey')]"
+					}
 				}
 			},
 			"dependsOn": []
@@ -96,47 +104,43 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DBX_Orders')]",
+			"name": "[concat(parameters('factoryName'), '/Landing_Path')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "Delta_Lake",
+					"referenceName": "Data_Lake",
 					"type": "LinkedServiceReference"
 				},
-				"annotations": [],
-				"type": "AzureDatabricksDeltaLakeDataset",
-				"typeProperties": {
-					"database": "bronze",
-					"table": "orders"
-				},
-				"schema": [
-					{
-						"name": "OrderId",
-						"type": "long"
-					},
-					{
-						"name": "OrderDate",
-						"type": "timestamp"
-					},
-					{
-						"name": "OrderNumber",
+				"parameters": {
+					"FileName": {
 						"type": "string"
-					},
-					{
-						"name": "CustomerId",
-						"type": "integer"
-					},
-					{
-						"name": "TotalAmount",
-						"type": "decimal",
-						"precision": 12,
-						"scale": 2
 					}
-				]
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat(\n    'landing_files/',\n    formatDateTime(utcNow(),'yyyy-MM-dd'),\n    '/'\n)",
+							"type": "Expression"
+						},
+						"fileSystem": "my-first-container"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/Delta_Lake')]"
+				"[concat(variables('factoryId'), '/linkedServices/Data_Lake')]"
 			]
 		},
 		{
@@ -168,7 +172,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/OLTP_Orders')]",
+			"name": "[concat(parameters('factoryName'), '/Cntrl_mapping_Table')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -180,35 +184,42 @@
 				"type": "SqlServerTable",
 				"schema": [
 					{
-						"name": "Id",
+						"name": "source_table_name",
+						"type": "varchar"
+					},
+					{
+						"name": "target_table_name",
+						"type": "varchar"
+					},
+					{
+						"name": "source_layer_name",
+						"type": "varchar"
+					},
+					{
+						"name": "target_layer_name",
+						"type": "varchar"
+					},
+					{
+						"name": "is_processed",
 						"type": "int",
 						"precision": 10
 					},
 					{
-						"name": "OrderDate",
+						"name": "last_load_st",
 						"type": "datetime",
 						"precision": 23,
 						"scale": 3
 					},
 					{
-						"name": "OrderNumber",
-						"type": "nvarchar"
-					},
-					{
-						"name": "CustomerId",
-						"type": "int",
-						"precision": 10
-					},
-					{
-						"name": "TotalAmount",
-						"type": "decimal",
-						"precision": 12,
-						"scale": 2
+						"name": "last_load_end",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
 					}
 				],
 				"typeProperties": {
-					"schema": "dbo",
-					"table": "Order"
+					"schema": "audit",
+					"table": "cntrl_mapping"
 				}
 			},
 			"dependsOn": [
@@ -216,14 +227,77 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"name": "[concat(parameters('factoryName'), '/Source_Tables')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SqlServer1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"SchemaName": {
+						"type": "string"
+					},
+					"TableName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "Id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "FirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "City",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Phone",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SqlServer1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Data_Ingestion_Pipeline')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"description": "Ingest data from OLTP to Databricks with a staging layer in between.",
 				"activities": [
 					{
-						"name": "IngestData",
-						"type": "Copy",
+						"name": "Fetch_Tables",
+						"description": "Read cntrl_mapping tables to fetch un_processed table names from OLTP.",
+						"type": "Lookup",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -236,39 +310,150 @@
 						"typeProperties": {
 							"source": {
 								"type": "SqlServerSource",
-								"sqlReaderQuery": "select * from dbo.[order] \nwhere cast(orderDate as Date) between (select cast(last_load_st as Date) from audit.cntrl_mapping) \nand (select cast(last_load_end as Date) from audit.cntrl_mapping)",
+								"sqlReaderQuery": "SELECT source_table_name, source_layer_name FROM sample_db.audit.cntrl_mapping where is_processed = 0",
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
-							"sink": {
-								"type": "AzureDatabricksDeltaLakeSink",
-								"importSettings": {
-									"type": "AzureDatabricksDeltaLakeImportCommand"
-								}
-							},
-							"enableStaging": true,
-							"stagingSettings": {
-								"linkedServiceName": {
-									"referenceName": "ADLS",
-									"type": "LinkedServiceReference"
-								},
-								"path": "my-first-container/staging_path"
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "OLTP_Orders",
+							"dataset": {
+								"referenceName": "Cntrl_mapping_Table",
 								"type": "DatasetReference",
 								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Iterate_Tables",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Fetch_Tables",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
-						"outputs": [
-							{
-								"referenceName": "DBX_Orders",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						]
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Fetch_Tables').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy_To_Landing",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "Source_Tables",
+											"type": "DatasetReference",
+											"parameters": {
+												"SchemaName": {
+													"value": "@item().source_layer_name",
+													"type": "Expression"
+												},
+												"TableName": {
+													"value": "@item().source_table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "Landing_Path",
+											"type": "DatasetReference",
+											"parameters": {
+												"FileName": {
+													"value": "@item().source_table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "Update_audit_table",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Copy_To_Landing",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[dbo].[update_cntrl_mapping]",
+										"storedProcedureParameters": {
+											"source_layer": {
+												"value": {
+													"value": "@item().source_layer_name",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"source_table": {
+												"value": {
+													"value": "@item().source_table_name",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "SqlServer1",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
 					}
 				],
 				"policy": {
@@ -277,9 +462,10 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/OLTP_Orders')]",
-				"[concat(variables('factoryId'), '/datasets/DBX_Orders')]",
-				"[concat(variables('factoryId'), '/linkedServices/ADLS')]"
+				"[concat(variables('factoryId'), '/datasets/Cntrl_mapping_Table')]",
+				"[concat(variables('factoryId'), '/datasets/Source_Tables')]",
+				"[concat(variables('factoryId'), '/datasets/Landing_Path')]",
+				"[concat(variables('factoryId'), '/linkedServices/SqlServer1')]"
 			]
 		}
 	]
